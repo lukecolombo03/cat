@@ -9,11 +9,9 @@
 #  - during SWAP, the person who used it can see what card they got
 
 
-
 import os
 import random
 import time
-from curses.ascii import isspace
 
 from colorama import *
 
@@ -68,11 +66,12 @@ def rules():
 # Normal exchange. First you pick which existing card you want to discard, then add the new card to your hand,
 # replacing that discarded one.
 class Normal:
-    def __init__(self, new_card, player, player_index, all_players):
+    def __init__(self, new_card, player, player_index, all_players, hidden):
         self.new_card = new_card
         self.player = player
         self.player_index = player_index
         self.all_players = all_players
+        self.hidden = hidden
 
     # runs this function object on the given player
     def run_func(self):
@@ -94,8 +93,12 @@ class Normal:
         old_card = hand[idx]
         hand[idx] = self.new_card  # mutates this player's hand (tbh I'm not sure why this works)
         top_discard = old_card
-        bot_hand_printed = "?? " * idx + "%s " % (Fore.LIGHTBLUE_EX + hand[idx] + Style.RESET_ALL) + "?? " * \
-                           (3 - idx) + "\t"
+        if self.hidden:
+            bot_hand_printed = "?? " * idx + "%s " % (Fore.LIGHTBLUE_EX + "??" + Style.RESET_ALL) + "?? " * \
+                               (3 - idx) + "\t"
+        else:
+            bot_hand_printed = "?? " * idx + "%s " % (Fore.LIGHTBLUE_EX + hand[idx] + Style.RESET_ALL) + "?? " * \
+                               (3 - idx) + "\t"
         human_hand_printed = "??\t" * idx + "%s\t" % (Fore.CYAN + hand[idx] + Style.RESET_ALL) + "??\t" * \
                              (3 - idx)
         if not self.player.is_bot():
@@ -103,8 +106,12 @@ class Normal:
         else:
             print("\n\n" + "?? ?? ?? ?? \t" * self.player_index + bot_hand_printed +
                   "?? ?? ?? ?? \t" * (len(self.all_players) - self.player_index - 1) + "\n\n")
+        if self.hidden:
+            new = "??"
+        else:
+            new = self.new_card
         print("%s exchanged %s for %s\n\n" % (self.player.get_name(), Fore.LIGHTBLUE_EX + old_card + Style.RESET_ALL,
-                                              Fore.LIGHTBLUE_EX + hand[idx]))
+                                              Fore.LIGHTBLUE_EX + new))
 
 
 # Peek: choose a card in your hand to reveal, then hide it again
@@ -138,11 +145,12 @@ class Peek:
 
 # Draw 2: draw two new cards from the deck, choose which one to keep, and perform a normal exchange with that one.
 class Draw2:
-    def __init__(self, new_card, player, player_index, all_players):
+    def __init__(self, new_card, player, player_index, all_players, hidden):
         self.player = player
         self.new_card = new_card
         self.player_index = player_index
         self.all_players = all_players
+        self.hidden = hidden
 
     # runs this function object on the given player
     def run_func(self):
@@ -157,10 +165,10 @@ class Draw2:
                            (card_one, card_two))
         if choice == "1":
             print("%s is playing first card: %s" % (self.player.get_name(), card_one))
-            self.player.play(card_one, self.player_index, self.all_players)
+            self.player.play(card_one, self.player_index, self.all_players, self.hidden)
         if choice == "2":
             print("%s playing second card: %s" % (self.player.get_name(), card_two))
-            self.player.play(card_two, self.player_index, self.all_players)
+            self.player.play(card_two, self.player_index, self.all_players, self.hidden)
 
 
 # Swap: choose a card in your hand, then a card in some other player's hand, and swap them with each other.
@@ -239,15 +247,15 @@ class Player:
         self.bot = isBot
 
     # Perform a normal exchange, or one of the power cards, based on what card you drew
-    def play(self, new_card, player_index, all_players):
+    def play(self, new_card, player_index, all_players, hidden=False):
         if new_card == "PEEK":
             Peek(new_card, self).run_func()
         elif new_card == "DRAW2":
-            Draw2(new_card, self, player_index, all_players).run_func()
+            Draw2(new_card, self, player_index, all_players, hidden).run_func()
         elif new_card == "SWAP":
             Swap(new_card, self, player_index, all_players).run_func()
         else:
-            Normal(new_card, self, player_index, all_players).run_func()
+            Normal(new_card, self, player_index, all_players, hidden).run_func()
         blah = input("Press ENTER to continue")
         if blah == "":
             pass
@@ -297,7 +305,8 @@ def end_game(players):
         print("%s: %s points\t%s" % (x.get_name(), x.calc_score(), x.get_hand()))
     lowest_score = min([x.calc_score() for x in players])
     winner = [x.get_name() for x in players if x.calc_score() == lowest_score]  # could have multiple winners
-    win_screen = "\nWinner(s): %s\n\n" % winner
+    winner = ' '.join(map(str, winner))
+    win_screen = "\nWinner(s): %s!!\n\n" % winner
     print(win_screen)
 
 
@@ -322,7 +331,7 @@ def run_game(players):
                 current_player.play(top_discard, turn_counter % len(players), players)
             else:
                 print("%s is playing a card they drew from the deck\n" % current_player.get_name())
-                current_player.play(draw_card(), turn_counter % len(players), players)
+                current_player.play(draw_card(), turn_counter % len(players), players, hidden=True)
             turn_counter += 1
             continue
         print("%s'S TURN" % (Style.BRIGHT + current_player.get_name().upper()))
@@ -355,7 +364,6 @@ def run_game(players):
 def start_screen(*args):
     global deck
     global top_discard
-    global num_of_players
     num_of_players = len(args)
     clear()
     players = [x for x in args]
@@ -370,10 +378,10 @@ def start_screen(*args):
                 players[0].get_card(3) + Style.RESET_ALL))
         blah = input("\n\nReady to play? Type your name, then press ENTER to continue 😻\n\n")
         if blah.isspace() or blah == "":
-            pass        # name defaults to Luke 😎
+            pass  # name defaults to Luke 😎
         else:
             players[0].set_name(blah)
         run_game(players)
 
 
-start_screen(Player("Luke", isBot=False), Player("P2"), Player("P3"), Player("P4"))
+start_screen(Player("Luke", isBot=False), Player("P2"), Player("P3"))
