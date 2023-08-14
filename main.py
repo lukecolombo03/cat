@@ -163,11 +163,9 @@ class Draw2:
             choice = input("\nYour new cards are:\n1) %s\n2) %s\n\nWhich would you like to keep? (1-2)" %
                            (card_one, card_two))
         if choice == "1":
-            print("%s is playing first card: %s" % (self.player.get_name(), card_one))
-            self.player.play(card_one, self.player_index, self.all_players, self.hidden)
+            self.player.play(card_one, self.player_index, self.all_players, self.hidden, recurred=True)
         if choice == "2":
-            print("%s playing second card: %s" % (self.player.get_name(), card_two))
-            self.player.play(card_two, self.player_index, self.all_players, self.hidden)
+            self.player.play(card_two, self.player_index, self.all_players, self.hidden, recurred=True)
 
 
 # Swap: choose a card in your hand, then a card in some other player's hand, and swap them with each other.
@@ -246,7 +244,7 @@ class Player:
         self.bot = isBot
 
     # Perform a normal exchange, or one of the power cards, based on what card you drew
-    def play(self, new_card, player_index, all_players, hidden=False):
+    def play(self, new_card, player_index, all_players, hidden=False, recurred=False):
         if new_card == "PEEK":
             Peek(new_card, self).run_func()
         elif new_card == "DRAW2":
@@ -255,9 +253,10 @@ class Player:
             Swap(new_card, self, player_index, all_players).run_func()
         else:
             Normal(new_card, self, player_index, all_players, hidden).run_func()
-        blah = input("Press ENTER to continue")
-        if blah == "":
-            pass
+        if not recurred:
+            blah = input("Press ENTER to continue")
+            if blah == "":
+                pass
 
     # Returns the card at the given index as a String
     def get_card(self, idx):
@@ -323,6 +322,9 @@ def run_game(players):
     while True:
         clear()
         current_player = turn_order[turn_counter % len(players)]
+        if turn_counter == 6 * len(players):
+            print(Fore.LIGHTYELLOW_EX + "Reminder: on your turn you can end the game by typing 'cat' instead of playing"
+                                        " any cards\n\n")
         if current_player.is_bot():  # Runs code for bots
             boolean = random.randint(0, 1)
             if boolean == 0:
