@@ -1,5 +1,5 @@
 # cat
-Recreation of the game "rat-a-tat-cat" in Python
+Personal project: recreation of the game "rat-a-tat-cat" in Python
 
 "Rat-a-tat-cat" is a card game (with a special deck, not a standard one) that I used to play all the time as a kid. I decided to recreate it on the computer after seeing the students at my work start their own card games in Python. It's meant to be played on the command line using keyboard inputs and a text-based view. The game is played with a facedown hand, and each turn you take a card from the deck or discard pile and exchange it for a card in your hand. On your turn, you can end the game and the person with the lowest hand values wins. The cards are 0-9, along with three 'power cards' which let you look at your hand, draw two extra cards, or swap a card with someone else.
 
