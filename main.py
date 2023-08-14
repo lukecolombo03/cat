@@ -6,7 +6,7 @@
 #  - make AI smarter
 #  - color code cards based on value/power
 #  - make UI better overall?
-#  - during SWAP, the person who used it can see what card they got
+#  - abstract/reduce code
 
 
 import os
@@ -42,7 +42,7 @@ def draw_card():
 top_discard = draw_card()
 
 
-def clear():
+def clear():    # saves me like .01 seconds each time I have to clear something
     os.system('clear')
 
 
@@ -50,7 +50,9 @@ def rules():
     print(
         "Rat-a-tat-cat is a memory card game where the lowest points wins. Throughout the game, your hand will be "
         "facedown, although you can look at two of your cards before the game starts.\n\nEach turn, you'll draw a card,"
-        " and exchange it for a card in your hand. You can look at the cards you're exchanging, but no other cards!\n\n"
+        " and exchange it for a card in your hand. You can draw the top card of the discard pile (which is always face "
+        "up), take a random card from the deck, or take no cards at all. You can look at the cards you're exchanging, "
+        "but no other cards!\n\n"
         "When you feel like you have a lower score than everybody else, type 'CAT' to end the round, reveal everyone's"
         " cards, and tally up the points.\n\n\nThe deck is made up of cards 0-9, along with DRAW2, SWAP, and PEEK.\n\n"
         "DRAW2: discard this card and draw two cards from the deck. You can look at them both and decide which one to "
@@ -60,7 +62,7 @@ def rules():
 
 
 # interface ExchangeFunction
-# void run_func(Player p, int playerIndex);
+# void run_func();
 
 # Normal exchange. First you pick which existing card you want to discard, then add the new card to your hand,
 # replacing that discarded one.
@@ -123,13 +125,15 @@ class Peek:
     def run_func(self):
         global top_discard
         if self.player.is_bot():  # only execute this function if this player is human
-            print("%s played a PEEK card\n\n" % self.player.get_name())
+            print("\n\n%s played a %s card\n\n" % (self.player.get_name(), Fore.LIGHTCYAN_EX + "PEEK" +
+                                                   Style.RESET_ALL))
         else:
             # idx is the index of the card that's being looked at
             idx = -1
             while idx < 0 or idx > 3:  # keep prompting them to pick a number until it's valid
                 try:
-                    idx = int(input("Type which card in your hand you want to look at (1-4)\n\n")) - 1
+                    idx = int(input(Fore.LIGHTCYAN_EX + "\n\nType which card in your hand you want to look at (1-4)\n\n"
+                                    + Style.RESET_ALL)) - 1
                 except TypeError:
                     print("\n\nERROR: please type an integer between 1 and 4\n\n")
                 if idx < 0 or idx > 3:
@@ -160,12 +164,13 @@ class Draw2:
         if self.player.is_bot():  # bot randomly chooses which card to draw
             choice = str(random.randint(1, 2))
         else:
-            choice = input("\nYour new cards are:\n1) %s\n2) %s\n\nWhich would you like to keep? (1-2)" %
-                           (card_one, card_two))
+            choice = input(Fore.LIGHTCYAN_EX +
+                           "\n\nYour drawn cards are:" + Style.RESET_ALL + "\n1) %s\n2) %s\n\n" % (card_one, card_two) +
+                           "Which would you like to use? (1-2)")
         if choice == "1":
-            self.player.play(card_one, self.player_index, self.all_players, self.hidden, recurred=True)
+            self.player.play(card_one, self.player_index, self.all_players, hidden=True, recurred=True)
         if choice == "2":
-            self.player.play(card_two, self.player_index, self.all_players, self.hidden, recurred=True)
+            self.player.play(card_two, self.player_index, self.all_players, hidden=True, recurred=True)
 
 
 # Swap: choose a card in your hand, then a card in some other player's hand, and swap them with each other.
@@ -197,16 +202,18 @@ class Swap:
 
         # ask for which player to swap with (2-4)
         idx_2 = -1
-        while idx_2 < 1 or idx_2 > 3:  # keep prompting them to pick a number until it's valid
-            if self.player.is_bot():
-                idx_2 = random.randint(1, 3)
+        max_idx = len(self.all_players) - 1  # maximum index to avoid error
+        while idx_2 < 1 or idx_2 > max_idx:  # keep prompting them to pick a number until it's valid
+            if self.player.is_bot():  # they pick any player besides themselves
+                player_indices = [x for x in list(range(0, len(self.all_players))) if x != self.player_index]
+                idx_2 = random.choice(player_indices)
             else:
                 try:
-                    idx_2 = int(input("Type which player you'd like to swap with (2-4)\n\n")) - 1
+                    idx_2 = int(input("Type which player you'd like to swap with (2-%s)\n\n" % (max_idx + 1))) - 1
                 except TypeError:  # in case they type a string
-                    print("\n\nERROR: please type an integer between 2 and 4\n\n")
-            if idx_2 < 0 or idx_2 > 3:  # in case they type a number out of bounds
-                print("\n\nERROR: please type an integer between 2 and 4\n\n")
+                    print("\n\nERROR: please type an integer between 2 and %s\n\n" % (max_idx + 1))
+            if idx_2 < 0 or idx_2 > max_idx:  # in case they type a number out of bounds
+                print("\n\nERROR: please type an integer between 2 and %s\n\n" % (max_idx + 1))
         other_player = self.all_players[idx_2]
         other_hand = other_player.get_hand()
 
@@ -230,9 +237,10 @@ class Swap:
         top_discard = self.new_card
 
         # then print a screen showing the swap
-        this_hand_printed = "??\t" * idx_1 + (Fore.CYAN + "??\t" + Style.RESET_ALL) + "??\t" * (3 - idx_1)
+        this_hand_printed = "??\t" * idx_1 + (Fore.CYAN + "%s\t" % other_card + Style.RESET_ALL) + "??\t" * (3 - idx_1)
         other_hand_printed = "??\t" * idx_3 + (Fore.LIGHTBLUE_EX + "??\t" + Style.RESET_ALL) + "??\t" * (3 - idx_3)
-        names = self.player.get_name() + ("\t" * 5) + other_player.get_name()
+        names = Fore.LIGHTCYAN_EX + "Swap!\n\n" + Style.RESET_ALL + self.player.get_name() + ("\t" * 5) + \
+                other_player.get_name()
         print("\n\n" + names + "\n\n" + this_hand_printed + "\t" + other_hand_printed + "\n\n")
 
 
@@ -265,7 +273,6 @@ class Player:
     # Calculates this player's score by adding up the values of each card in their hand. Power cards are replaced with
     # a random card from the deck.
     def calc_score(self):
-        # print("%s's hand before: %s" % (self.get_name(), self.get_hand()))
         self.hand = [finalize_hand(card) for card in self.hand]
         hand_as_ints = [int(card) for card in self.hand]
         score = 0
@@ -303,8 +310,7 @@ def end_game(players):
         print("%s: %s points\t%s" % (x.get_name(), x.calc_score(), x.get_hand()))
     lowest_score = min([x.calc_score() for x in players])
     winner = [x.get_name() for x in players if x.calc_score() == lowest_score]  # could have multiple winners
-    winner = ' '.join(map(str, winner))
-    win_screen = "\nWinner(s): %s!!\n\n" % winner
+    win_screen = "\nWinner(s): %s!!\n\n" % ' '.join(map(str, winner))
     print(win_screen)
 
 
@@ -312,7 +318,7 @@ wait_time = 2
 
 
 # Run the game
-def run_game(players):
+def run(players):
     global top_discard
     turn_order = {}  # A map of player names to numbers, representing what order they do their turn
     for count, player in enumerate(players):
@@ -365,7 +371,6 @@ def run_game(players):
 def start_screen(*args):
     global deck
     global top_discard
-    num_of_players = len(args)
     clear()
     players = [x for x in args]
     rules()
@@ -382,7 +387,7 @@ def start_screen(*args):
             pass  # name defaults to Luke 😎
         else:
             players[0].set_name(blah)
-        run_game(players)
+        run(players)
 
 
-start_screen(Player("Luke", isBot=False), Player("Bot1"), Player("Bot2"), Player("Bot3"))
+start_screen(Player("Luke", isBot=False), Player("Bot1"), Player("Bot2"), Player("Bot3"), Player("Bot4"))
