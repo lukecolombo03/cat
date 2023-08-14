@@ -48,16 +48,15 @@ def clear():
 
 def rules():
     print(
-        "Rat-a-tat-cat is a memory card game where the lowest points wins. You start with all four of your cards face "
-        "down; you can look at two to start, but then must flip those over as well.\n\nEach turn, you'll draw a card, "
-        "and exchange it for a card in your hand. You can look at the cards you're exchanging, but no other cards!\n\n"
+        "Rat-a-tat-cat is a memory card game where the lowest points wins. Throughout the game, your hand will be "
+        "facedown, although you can look at two of your cards before the game starts.\n\nEach turn, you'll draw a card,"
+        " and exchange it for a card in your hand. You can look at the cards you're exchanging, but no other cards!\n\n"
         "When you feel like you have a lower score than everybody else, type 'CAT' to end the round, reveal everyone's"
-        " cards, and tally up "
-        "the points.\n\n\nThe deck is made up of cards 0-9, along with DRAW2, SWAP, and PEEK.\n\nDRAW2: discard this card"
-        "and draw two cards from the deck. You can look at them both and decide which one to exchange.\n\nSWAP: you "
-        "must swap one of your cards with another player's cards.\n\nPEEK: you may look at one of your cards\n\n(If you"
-        " have any of these cards in your hand when the round ends, they will be replaced with a random card from the "
-        "deck.)")
+        " cards, and tally up the points.\n\n\nThe deck is made up of cards 0-9, along with DRAW2, SWAP, and PEEK.\n\n"
+        "DRAW2: discard this card and draw two cards from the deck. You can look at them both and decide which one to "
+        "exchange.\n\nSWAP: you must swap one of your cards with another player's cards.\n\nPEEK: you may look at one "
+        "of your cards\n\n(If you have any of these cards in your hand when the round ends, they will be replaced with "
+        "a random card from the deck.)")
 
 
 # interface ExchangeFunction
@@ -384,4 +383,4 @@ def start_screen(*args):
         run_game(players)
 
 
-start_screen(Player("Luke", isBot=False), Player("P2"), Player("P3"))
+start_screen(Player("Luke", isBot=False), Player("Bot1"), Player("Bot2"), Player("Bot3"))
