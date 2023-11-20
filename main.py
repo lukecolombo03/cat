@@ -46,7 +46,7 @@ def clear():    # saves me like .01 seconds each time I have to clear something
     os.system('clear')
 
 
-def rules():
+def print_rules():
     print(
         "Rat-a-tat-cat is a memory card game where the lowest points wins. Throughout the game, your hand will be "
         "facedown, although you can look at two of your cards before the game starts.\n\nEach turn, you'll draw a card,"
@@ -373,7 +373,7 @@ def start_screen(*args):
     global top_discard
     clear()
     players = [x for x in args]
-    rules()
+    print_rules()
     blah = input("\n\n\nTwo cards in your hand will display now. Take a good look, because they'll be hidden "
                  "after that! Press ENTER to continue")
     if blah == "":
