@@ -361,11 +361,16 @@ def run(players):
                 time.sleep(wait_time)
                 clear()
                 top_discard = top_deck  # still discard the top deck card
-        if first_input.upper() == "CAT" and turn_counter >= 2:  # End game
-            end_game(players)
-            break
+        if first_input.upper() == "CAT":  # User requests to end game
+            if turn_counter >= 2:
+                end_game(players)
+                break
+            else:
+                print(Style.BRIGHT + Fore.YELLOW + "\nCannot end game on your first turn!\n\n" + Style.RESET_ALL)
+                time.sleep(3)
+                turn_counter -= 1   # Keep this same player's turn
         else:
-            print(Style.BRIGHT + Fore.RED + "\nUnrecognized input! Please go again.\n\n" + Style.RESET_ALL)
+            print(Style.BRIGHT + Fore.YELLOW + "\nUnrecognized input! Please go again.\n\n" + Style.RESET_ALL)
             time.sleep(2)
             turn_counter -= 1   # Keep this same player's turn
         turn_counter += 1  # Next player's turn
