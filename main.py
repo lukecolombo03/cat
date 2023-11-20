@@ -371,7 +371,7 @@ def run(players):
                 turn_counter -= 1   # Keep this same player's turn
         else:
             print(Style.BRIGHT + Fore.YELLOW + "\nUnrecognized input! Please go again.\n\n" + Style.RESET_ALL)
-            time.sleep(2)
+            time.sleep(3)
             turn_counter -= 1   # Keep this same player's turn
         turn_counter += 1  # Next player's turn
 
