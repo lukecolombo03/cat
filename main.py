@@ -13,7 +13,7 @@ import os
 import random
 import time
 
-from colorama import *
+from colorama import init, Style, Fore, Back
 
 init(autoreset=True)  # for colorama library
 
