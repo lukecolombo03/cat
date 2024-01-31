@@ -58,7 +58,8 @@ def print_rules():
         "DRAW2: discard this card and draw two cards from the deck. You can look at them both and decide which one to "
         "exchange.\n\nSWAP: you must swap one of your cards with another player's cards.\n\nPEEK: you may look at one "
         "of your cards\n\n(If you have any of these cards in your hand when the round ends, they will be replaced with "
-        "a random card from the deck.)")
+        "a random card from the deck.)\n\n\nRead the official game rules here: "
+        "https://gamewright.com/product/Rat-a-Tat-Cat")
 
 
 # interface ExchangeFunction
